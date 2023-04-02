@@ -2,6 +2,7 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const firebase = require('firebase-admin');
 const serviceAccount = require('./grpc-nodejs-gilbert-firebase-adminsdk-ks4kk-d6083f5f19.json');
+const todo_pb = require('./todo_pb');
 
 firebase.initializeApp({
   credential: firebase.credential.cert(serviceAccount),
