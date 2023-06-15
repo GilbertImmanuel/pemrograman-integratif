@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package data;
+
+service FootballersData {
+    rpc CreateFootballers (Footballers) returns (Footballers) {}
+    rpc ReadAllFootballers (Empty) returns (FootballersList) {}
+    rpc ReadFootballers (FootballersRequest) returns (Footballers) {}
+    rpc UpdateFootballers (UpdateFootballersRequest) returns (Footballers) {}
+    rpc DeleteFootballers (FootballersRequest) returns (Footballers) {}
+}
+
+message Empty {}
+
+message Footballers {
+    string name = 1;
+    string nation = 2;
+    string club = 3;
+}
+
+message UpdateFootballersRequest {
+    string name = 1;
+    string nation = 2;
+    string club = 3;
+    int32 id = 4;
+}
+
+message FootballersList {
+    repeated Footballers footballers = 1;
+}
+
+message FootballersRequest {
+    int32 id = 1;
+}

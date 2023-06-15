@@ -1,225 +1,52 @@
-# pemrograman-integratif-grpc-CRUD
+# Implementasi CRUD GRPC dan protobuf dengan NODE JS
+## Package yang digunakan:
+* Node.js
+* XAMPP/mySQL
 
-Kita perlu pengetahuan dasar dari :
-- Client to server communication
-- MySQL
-- Javasript
-- Node JS
-- Rest API
+## Cara pemakaian:
+  - Masuk ke direktori
+  - Menjalankan ```npm install```
+  - Menjalankan ```node server.js```
+  - Melakukan testing dengan aplikasi seperti Postman, dll.
 
-## Persiapan
-Yang perlu diinstalasi :
-- Node JS
-- NPM
-- XAMPP/MySQL
+## Dokumentasi:
 
-#### 1. Proto file
-```proto
-syntax = "proto3";
+Menjalankan server
 
-package User;
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791417049911296/Screenshot_2285.png)
 
-service UserService {
-	rpc GetUser (GetUserRequest) returns (UserResponse) {}
-	rpc AddUser (AddUserRequest) returns (UserResponse) {}
-	rpc UpdateUser (UpdateUserRequest) returns (UserResponse) {}
-	rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
-}
+Menjalankan fungsi Read All
 
-message GetUserRequest {
-	string user_id = 1;
-}
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791424301879346/Screenshot_2286.png)
 
-message AddUserRequest {
-	string name = 1;
-	int32 age = 2;
-}
+Database mySQL
 
-message UpdateUserRequest {
-	string user_id = 1;
-	string name = 2;
-	int32 age = 3;
-}
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791451183157258/Screenshot_2288.png)
 
-message DeleteUserRequest {
-	string user_id = 1;
-}
+Menjalankan fungsi Read
 
-message UserResponse {
-	string user_id = 1;
-	string name = 2;
-	int32 age = 3;
-}
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791440986808360/Screenshot_2287.png)
 
-message DeleteUserResponse {
-	bool success = 1;
-}
-```
-#### 2. Client
-```js
-const grpc = require('grpc');
-const protoLoader = require('@grpc/proto-loader');
+Menjalankan fungsi Create
 
-const PROTO_PATH = './service_def.proto';
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791465502519396/Screenshot_2289.png)
 
-const packageDefinition = protoLoader.loadSync(PROTO_PATH);
-const userProto = grpc.loadPackageDefinition(packageDefinition).User;
+Database mySQL setelah dijalankan fungsi Create
 
-const client = new userProto.UserService('localhost:5000', grpc.credentials.createInsecure());
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791495995113552/Screenshot_2290.png)
 
-function getUser(userId) {
-  return new Promise((resolve, reject) => {
-    client.getUser({ user_id: userId }, (error, user) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(user);
-      }
-    });
-  });
-}
+Menjalankan fungsi Update
 
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791506464084019/Screenshot_2291.png)
 
-function addUser(name, age) {
-  return new Promise((resolve, reject) => {
-    const user = { name, age };
-    client.addUser(user, (error, response) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
-    });
-  });
-}
+Database mySQL setelah dijalankan fungsi Update
 
-function updateUser(userId, name, age) {
-  return new Promise((resolve, reject) => {
-    const user = { user_id: userId, name, age };
-    client.updateUser(user, (error, response) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
-    });
-  });
-}
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791523887230986/Screenshot_2292.png)
 
-function deleteUser(userId) {
-  return new Promise((resolve, reject) => {
-    client.deleteUser({ user_id: userId }, (error, response) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
-    });
-  });
-}
+Menjalankan fungsi Delete
 
-async function test() {
-  try {
-    const user = await getUser('1');
-    console.log('getUser:', user);
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791540886741022/Screenshot_2293.png)
 
-    const newUser = await addUser('John Wick', 30);
-    console.log('addUser:', newUser);
+Database mySQL setelah dijalankan fungsi Delete
 
-    const updatedUser = await updateUser('1', 'John Cena', 35);
-    console.log('updateUser:', updatedUser);
-
-    const result = await deleteUser('2');
-    console.log('deleteUser:', result);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-test();
-```
-
-#### 3. Server
-```js
-const grpc = require('grpc');
-const protoLoader = require('@grpc/proto-loader');
-const mysql = require('mysql2');
-
-const PROTO_PATH = './service_def.proto';
-
-const packageDefinition = protoLoader.loadSync(PROTO_PATH);
-const userProto = grpc.loadPackageDefinition(packageDefinition).User;
-
-const pool = mysql.createPool({
-	host: 'localhost',
-	user: 'root',
-	password: '',
-	database: 'tugaspi',
-	waitForConnections: true,
-	connectionLimit: 10,
-});
-
-function getUser(call, callback) {
-	const userId = call.request.user_id;
-	pool.query('SELECT * FROM users WHERE user_id = ?', [userId], (error, results) => {
-		if (error) {
-			console.error(error);
-			callback({
-				code: grpc.status.INTERNAL,
-				message: 'Internal Server Error'
-			});
-			return;
-		}
-		if (results.length === 0) {
-			callback({
-				code: grpc.status.NOT_FOUND,
-				message: 'User not found'
-			});
-			return;
-		}
-		const userData = results[0];
-		const user = {
-			user_id: userData.user_id,
-			name: userData.name,
-			age: userData.age,
-		};
-		callback(null, user);
-	});
-}
-
-function addUser(call, callback) {
-	const name = call.request.name;
-	const age = call.request.age;
-	pool.query('INSERT INTO users (name, age) VALUES (?, ?)', [name, age], (error, result) => {
-		if (error) {
-			console.error(error);
-			callback({
-				code: grpc.status.INTERNAL,
-				message: 'Internal Server Error'
-			});
-			return;
-		}
-		const userId = result.insertId;
-		const user = {
-			user_id: userId,
-			name: name,
-			age: age,
-		};
-		callback(null, user);
-	});
-}
-
-function main() {
-	const server = new grpc.Server();
-	server.addService(userProto.UserService.service, {
-		getUser,
-		addUser
-	});
-	server.bindAsync('localhost:50051', grpc.ServerCredentials.createInsecure(), () => {
-		console.log('Server running at http://localhost:50051');
-		server.start();
-	});
-}
-
-main();
-```
+![image](https://cdn.discordapp.com/attachments/818011685695520769/1118791581063970827/Screenshot_2294.png)

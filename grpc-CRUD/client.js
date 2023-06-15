@@ -1,80 +1,92 @@
-const grpc = require('grpc');
-const protoLoader = require('@grpc/proto-loader');
+import grpc from '@grpc/grpc-js';
+import protoLoader from '@grpc/proto-loader';
 
-const PROTO_PATH = './service_def.proto';
-
+const PROTO_PATH = './data.proto';
 const packageDefinition = protoLoader.loadSync(PROTO_PATH);
-const userProto = grpc.loadPackageDefinition(packageDefinition).User;
+const grpcObject = grpc.loadPackageDefinition(packageDefinition);
+const movieData = grpcObject.data.MovieData;
 
-const client = new userProto.UserService('localhost:5000', grpc.credentials.createInsecure());
+const client = new movieData('localhost:50051', grpc.credentials.createInsecure());
 
-function getUser(userId) {
-  return new Promise((resolve, reject) => {
-    client.getUser({ user_id: userId }, (error, user) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(user);
-      }
+function createMovie(name, release, rating) {
+    const movie = {
+        name: name,
+        release: release,
+        rating: rating,
+    };
+
+    client.CreateMovie(movie, (err, response) => {
+        console.log(response);
+        if (err) {
+            console.error(err);
+            return;
+        }
+
+        console.log(`Movie created`);
     });
-  });
 }
 
+function readAllMovies() {
+    client.ReadAllMovies(null, (err, response) => {
+        if (err) {
+            console.error(err)
+            return;
+        }
 
-function addUser(name, age) {
-  return new Promise((resolve, reject) => {
-    const user = { name, age };
-    client.addUser(user, (error, response) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
+        console.log(response)
+    })
+}
+
+function readMovie(id) {
+    client.ReadMovie({ id: id }, (err, response) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+
+        console.log(response);
     });
-  });
 }
 
-function updateUser(userId, name, age) {
-  return new Promise((resolve, reject) => {
-    const user = { user_id: userId, name, age };
-    client.updateUser(user, (error, response) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
+function updateMovie(id, name, release, rating) {
+    const movie = {
+        name: name,
+        release: release,
+        rating: rating,
+        id: id
+    };
+
+    client.UpdateMovie(movie, (err, response) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+
+        console.log(`Updated movie with id ${response.id}`);
     });
-  });
 }
 
-function deleteUser(userId) {
-  return new Promise((resolve, reject) => {
-    client.deleteUser({ user_id: userId }, (error, response) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
+function deleteMovie(id) {
+    client.DeleteMovie({ id: id }, (err, response) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+
+        console.log(`Deleted movie with id ${id}`);
     });
-  });
 }
 
-async function test() {
-  try {
-    const user = await getUser('1');
-    console.log('getUser:', user);
-
-    const newUser = await addUser('John Wick', 30);
-    console.log('addUser:', newUser);
-
-    const updatedUser = await updateUser('1', 'John Cena', 35);
-    console.log('updateUser:', updatedUser);
-
-    const result = await deleteUser('2');
-    console.log('deleteUser:', result);
-  } catch (error) {
-    console.error(error);
-  }
+export default{
+  createMovie,
+  readAllMovies,
+  readMovie,
+  updateMovie,
+  deleteMovie
 }
 
-test();
+// Contoh penggunaan fungsi-fungsi CRUD
+// createMovie('John Doe', 'Jl. Sudirman No. 123', 25, 'male');
+// readUser(1);
+// updateUser(1, 'Jane Doe', 'Jl. Gatot Subroto No. 456', 27, 'female');
+// deleteMovie(1);
