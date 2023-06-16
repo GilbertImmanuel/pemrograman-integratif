@@ -4,30 +4,30 @@ import protoLoader from '@grpc/proto-loader';
 const PROTO_PATH = './data.proto';
 const packageDefinition = protoLoader.loadSync(PROTO_PATH);
 const grpcObject = grpc.loadPackageDefinition(packageDefinition);
-const movieData = grpcObject.data.MovieData;
+const footballersData = grpcObject.data.FootballersData;
 
-const client = new movieData('localhost:50051', grpc.credentials.createInsecure());
+const client = new footballersData('localhost:50051', grpc.credentials.createInsecure());
 
-function createMovie(name, release, rating) {
-    const movie = {
+function createFootballers(name, nation, club) {
+    const footballers = {
         name: name,
-        release: release,
-        rating: rating,
+        nation: nation,
+        club: club,
     };
 
-    client.CreateMovie(movie, (err, response) => {
+    client.createFootballers(footballers, (err, response) => {
         console.log(response);
         if (err) {
             console.error(err);
             return;
         }
 
-        console.log(`Movie created`);
+        console.log(`Player created`);
     });
 }
 
-function readAllMovies() {
-    client.ReadAllMovies(null, (err, response) => {
+function readAllFootballers() {
+    client.ReadAllFootballers(null, (err, response) => {
         if (err) {
             console.error(err)
             return;
@@ -37,8 +37,8 @@ function readAllMovies() {
     })
 }
 
-function readMovie(id) {
-    client.ReadMovie({ id: id }, (err, response) => {
+function readFootballers(id) {
+    client.ReadFootballers({ id: id }, (err, response) => {
         if (err) {
             console.error(err);
             return;
@@ -48,45 +48,39 @@ function readMovie(id) {
     });
 }
 
-function updateMovie(id, name, release, rating) {
-    const movie = {
+function updateFootballers(id, name, nation, club) {
+    const footballers = {
         name: name,
-        release: release,
-        rating: rating,
+        nation: nation,
+        club: club,
         id: id
     };
 
-    client.UpdateMovie(movie, (err, response) => {
+    client.UpdateFootballers(footballers, (err, response) => {
         if (err) {
             console.error(err);
             return;
         }
 
-        console.log(`Updated movie with id ${response.id}`);
+        console.log(`Updated footballer with id ${response.id}`);
     });
 }
 
-function deleteMovie(id) {
-    client.DeleteMovie({ id: id }, (err, response) => {
+function deleteFootballers(id) {
+    client.DeleteFootballers({ id: id }, (err, response) => {
         if (err) {
             console.error(err);
             return;
         }
 
-        console.log(`Deleted movie with id ${id}`);
+        console.log(`Deleted footballer with id ${id}`);
     });
 }
 
 export default{
-  createMovie,
-  readAllMovies,
-  readMovie,
-  updateMovie,
-  deleteMovie
+  createFootballers,
+  readAllFootballers,
+  readFootballers,
+  updateFootballers,
+  deleteFootballers
 }
-
-// Contoh penggunaan fungsi-fungsi CRUD
-// createMovie('John Doe', 'Jl. Sudirman No. 123', 25, 'male');
-// readUser(1);
-// updateUser(1, 'Jane Doe', 'Jl. Gatot Subroto No. 456', 27, 'female');
-// deleteMovie(1);
